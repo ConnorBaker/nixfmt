@@ -58,7 +58,8 @@ data Nixfmt = Nixfmt
     verify :: Bool,
     ast :: Bool,
     filename :: Maybe FilePath,
-    ir :: Bool
+    ir :: Bool,
+    list_folding_rewrites :: Bool
   }
   deriving (Show, Data, Typeable)
 
@@ -97,7 +98,11 @@ options =
         ir =
           False
             &= help
-              "Pretty print the internal intermediate representation, only for debugging"
+              "Pretty print the internal intermediate representation, only for debugging",
+        list_folding_rewrites =
+          False
+            &= help
+              "Perform list folding rewrites (e.g., `[] ++ x` to `x`, `x ++ []` to `x`, etc.)"
       }
       &= summary ("nixfmt " ++ versionFromFile)
       &= help "Format Nix source code"
@@ -177,6 +182,8 @@ toTargets Nixfmt{check = True, files = paths} = map checkFileTarget <$> collectA
 type Formatter = FilePath -> Text -> Either String Text
 
 toFormatter :: Nixfmt -> Formatter
+toFormatter Nixfmt{ast = True, list_folding_rewrites = True} = Nixfmt.printAstWithRewrites
+toFormatter Nixfmt{width, indent, ast = False, list_folding_rewrites = True, strict} = Nixfmt.printWithRewrites (layout width indent strict)
 toFormatter Nixfmt{ast = True} = Nixfmt.printAst
 toFormatter Nixfmt{ir = True} = Nixfmt.printIR
 toFormatter Nixfmt{width, indent, verify = True, strict} = Nixfmt.formatVerify (layout width indent strict)

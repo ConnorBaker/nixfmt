@@ -6,8 +6,10 @@ module Nixfmt (
   Width,
   format,
   formatVerify,
+  printAstWithRewrites,
   printAst,
   printIR,
+  printWithRewrites,
 )
 where
 
@@ -18,6 +20,7 @@ import Data.Text.Lazy (toStrict)
 import qualified Nixfmt.Parser as Parser
 import Nixfmt.Predoc (Pretty, fixup, pretty)
 import Nixfmt.Pretty ()
+import Nixfmt.Rewrite (doRewrites)
 import Nixfmt.Types (Expression, LanguageElement, ParseErrorBundle, Whole (..), walkSubprograms)
 import qualified Text.Megaparsec as Megaparsec (parse)
 import Text.Megaparsec.Error (errorBundlePretty)
@@ -35,6 +38,16 @@ format :: Layouter -> FilePath -> Text -> Either String Text
 format layout filename =
   bimap errorBundlePretty layout
     . Megaparsec.parse Parser.file filename
+
+printWithRewrites :: Layouter -> FilePath -> Text -> Either String Text
+printWithRewrites layout path unformatted = do
+  Whole unformattedParsed' trivia <- first errorBundlePretty . Megaparsec.parse Parser.file path $ unformatted
+  Right (layout (Whole (doRewrites unformattedParsed') trivia))
+
+printAstWithRewrites :: FilePath -> Text -> Either String Text
+printAstWithRewrites path unformatted = do
+  Whole unformattedParsed' _ <- first errorBundlePretty . Megaparsec.parse Parser.file path $ unformatted
+  Left (unpack $ toStrict $ pShow $ doRewrites $ unformattedParsed')
 
 -- | Pretty print the internal AST for debugging
 printAst :: FilePath -> Text -> Either String Text

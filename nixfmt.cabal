@@ -61,6 +61,8 @@ library
     Nixfmt.Parser.Float
     Nixfmt.Predoc
     Nixfmt.Pretty
+    Nixfmt.Rewrite
+    Nixfmt.Rewrite.List
     Nixfmt.Types
     Nixfmt.Util
 
