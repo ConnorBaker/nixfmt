@@ -12,6 +12,7 @@ module Nixfmt.Rewrite (
 )
 where
 
+import Data.Foldable (foldl')
 import Nixfmt.Pretty ()
 import Nixfmt.Rewrite.List (rewriteListConcatenation)
 import Nixfmt.Types (Expression)
